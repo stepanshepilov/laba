@@ -1,12 +1,13 @@
 version: "3.8"
 
 services:
-  worker:
+  worker:              # Имя сервиса
     build:
-      context: .
+      context: .       # Строим образ из текущей папки (ищем там Dockerfile)
     volumes:
-      - shared_volume:/shared_volume
-    restart: unless-stopped
+      - shared_volume:/shared_volume # МОНТИРОВАНИЕ: <имя_тома>:<путь_внутри_контейнера>
+                                     # Все контейнеры 'worker' будут видеть одну и ту же папку
+    restart: unless-stopped          # Если скрипт упадет, докер его перезапустит
 
 volumes:
-  shared_volume:
+  shared_volume:       # Объявление именованного тома, который живет отдельно от контейнеров
