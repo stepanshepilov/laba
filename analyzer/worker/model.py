@@ -3,6 +3,7 @@ from textblob import TextBlob
 from loguru import logger
 import asyncio
 import socket
+import signal
 import redis
 import json
 import os
@@ -13,10 +14,18 @@ GROUP_ID = os.getenv('GROUP_ID', 'my_group')
 REDIS_HOST = os.getenv('REDIS_HOST', 'localhost')
 WORKER_ID = socket.gethostname()
 redis_client = redis.Redis(REDIS_HOST, port=6379, db=0, decode_responses=True)
+shutdown_event = asyncio.Event()
+
+def handle_kill():
+    logger.critical('Словил sigterm')
+    shutdown_event.set()
 
 async def consume():
     logger.info(f"Worker {WORKER_ID} starting...")
     
+    loop = asyncio.get_running_loop()
+    loop.add_signal_handler(signal.SIGTERM, handle_kill)
+    loop.add_signal_handler(signal.SIGINT, handle_kill)
     consumer = None
     retry_count = 0
     max_retries = 25
