@@ -15,9 +15,7 @@
 volatile sig_atomic_t got_sighup = 0;
 
 void handle_signal(int sig) {
-    if (sig == SIGHUP) {
-        got_sighup = 1;
-    }
+    got_sighup = 1;
 }
 
 int main() {
@@ -80,16 +78,19 @@ int main() {
         int nfds = (client_fd > server_fd ? client_fd : server_fd) + 1;
 
         int ready = pselect(nfds, &read_fds, NULL, NULL, NULL, &origmask);
-        
-        if (got_sighup) {
-            printf("Received SIGHUP\n");
-            got_sighup = 0;
-        }
-        
+
         if (ready == -1) {
-            if (errno == EINTR) continue;
-            perror("pselect");
-            break;
+            if (errno == EINTR) {
+                if (got_sighup) {
+                    printf("Received SIGHUP\n");
+                    got_sighup = 0;
+                }
+                continue;
+            }
+            else {
+                perror("pselect");
+                break;
+            }
         }
 
         if (FD_ISSET(server_fd, &read_fds)) {
@@ -112,7 +113,6 @@ int main() {
             ssize_t bytes_read = recv(client_fd, buffer, sizeof(buffer), 0);
             if (bytes_read > 0) {
                 printf("Received %zd bytes of data\n", bytes_read);
-                send(client_fd, "OK", 2, 0);
             } 
             else if (bytes_read == 0) {
                 printf("Client disconnected\n");
