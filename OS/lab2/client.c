@@ -44,16 +44,6 @@ int main() {
     }
     printf("Sent message: %s\n", message);
 
-    bytes_received = recv(sock, buffer, sizeof(buffer) - 1, 0);
-    if (bytes_received > 0) {
-        buffer[bytes_received] = '\0';
-        printf("Received from server: %s\n", buffer);
-    } else if (bytes_received == 0) {
-        printf("Server closed connection.\n");
-    } else {
-        perror("recv");
-    }
-
     close(sock);
     printf("Connection closed.\n");
     return 0;
